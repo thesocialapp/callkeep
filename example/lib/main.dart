@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 import 'package:callkeep/callkeep.dart';
@@ -128,15 +127,9 @@ class _MyAppState extends State<HomePage> {
   final FlutterCallkeep _callKeep = FlutterCallkeep();
   Map<String, Call> calls = {};
   String newUUID() => Uuid().v4();
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   void iOS_Permission() {
-    _firebaseMessaging.requestNotificationPermissions(
-        IosNotificationSettings(sound: true, badge: true, alert: true));
-    _firebaseMessaging.onIosSettingsRegistered
-        .listen((IosNotificationSettings settings) {
-      print('Settings registered: $settings');
-    });
+
   }
 
   void removeCall(String callUUID) {
@@ -326,37 +319,6 @@ class _MyAppState extends State<HomePage> {
     if (Platform.isAndroid) {
       //if (isIOS) iOS_Permission();
       //  _firebaseMessaging.requestNotificationPermissions();
-
-      _firebaseMessaging.getToken().then((token) {
-        print('[FCM] token => ' + token);
-      });
-
-      _firebaseMessaging.configure(
-        onMessage: (Map<String, dynamic> message) async {
-          print('onMessage: $message');
-          if (message.containsKey('data')) {
-            // Handle data message
-            var payload = message['data'];
-            var callerId = payload['caller_id'] as String;
-            var callerName = payload['caller_name'] as String;
-            var uuid = payload['uuid'] as String;
-            var hasVideo = payload['has_video'] == "true";
-            final callUUID = uuid ?? Uuid().v4();
-            setState(() {
-              calls[callUUID] = Call(callerId);
-            });
-            _callKeep.displayIncomingCall(callUUID, callerId,
-                localizedCallerName: callerName, hasVideo: hasVideo);
-          }
-        },
-        onBackgroundMessage: myBackgroundMessageHandler,
-        onLaunch: (Map<String, dynamic> message) async {
-          print('onLaunch: $message');
-        },
-        onResume: (Map<String, dynamic> message) async {
-          print('onResume: $message');
-        },
-      );
     }
   }
 
